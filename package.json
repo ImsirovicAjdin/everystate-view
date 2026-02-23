@@ -1,0 +1,31 @@
+{
+  "name": "@everystate/view",
+  "version": "1.0.0",
+  "description": "EveryState View: DOM structure as first-class state. DOMless resolve + surgical project.",
+  "type": "module",
+  "main": "index.js",
+  "keywords": [
+    "everystate",
+    "view-as-state",
+    "state-driven-development",
+    "sdd",
+    "domless-testing",
+    "view-tree",
+    "resolve-project",
+    "reactive-dom",
+    "path-based",
+    "zero-build"
+  ],
+  "author": {
+    "name": "Ajdin Imsirovic",
+    "url": "https://www.linkedin.com/in/ajdin-imsirovic"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ImsirovicAjdin/everystate-view"
+  },
+  "dependencies": {
+    "@uistate/view": "^1.0.0"
+  }
+}
