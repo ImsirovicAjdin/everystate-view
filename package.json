@@ -1,9 +1,10 @@
 {
   "name": "@everystate/view",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "EveryState View: DOM structure as first-class state. DOMless resolve + surgical project.",
   "type": "module",
   "main": "index.js",
+  "types": "index.d.ts",
   "keywords": [
     "everystate",
     "view-as-state",
@@ -25,7 +26,11 @@
     "type": "git",
     "url": "https://github.com/ImsirovicAjdin/everystate-view"
   },
-  "dependencies": {
-    "@uistate/view": "^1.0.0"
-  }
+  "files": [
+    "index.js",
+    "resolve.js",
+    "project.js",
+    "index.d.ts",
+    "README.md"
+  ]
 }

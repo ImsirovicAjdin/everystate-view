@@ -1,8 +1,6 @@
 /**
  * @everystate/view
- *
- * EveryState wrapper for @uistate/view
- * Re-exports all functionality from the underlying @uistate/view package
  */
 
-export * from '@uistate/view';
+export * from './resolve.js';
+export { mount, extractDataPaths } from './project.js';

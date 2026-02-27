@@ -13,10 +13,10 @@ npm install @everystate/view @everystate/core
 ## Quick Start
 
 ```js
-import { createEventState } from '@everystate/core';
+import { createEveryState } from '@everystate/core';
 import { flatten, resolveTree, project } from '@everystate/view';
 
-const store = createEventState({});
+const store = createEveryState({});
 
 // Define view as nested structure
 const viewSpec = {
@@ -40,10 +40,10 @@ project(store, 'view.root', container);
 
 ## Why View-as-State?
 
-- **DOMless testing** — Assert on view tree in Node.js, no browser required
-- **Surgical updates** — Only changed nodes re-render
-- **State-driven** — View is just another part of your state tree
-- **Framework-free** — Works with vanilla JS or any framework
+- **DOMless testing** - Assert on view tree in Node.js, no browser required
+- **Surgical updates** - Only changed nodes re-render
+- **State-driven** - View is just another part of your state tree
+- **Framework-free** - Works with vanilla JS or any framework
 
 ## License
 
