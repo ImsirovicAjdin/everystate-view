@@ -27,10 +27,10 @@
     "url": "https://github.com/ImsirovicAjdin/everystate-view"
   },
   "files": [
-    "index.js",
-    "resolve.js",
-    "project.js",
-    "index.d.ts",
-    "README.md"
+    "*.js",
+    "*.d.ts",
+    "*.md",
+    "*.html",
+    "tests/"
   ]
 }

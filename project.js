@@ -75,10 +75,9 @@ export function extractDataPaths(textSpec) {
       paths.add(expr.slice(0, -7));
       continue;
     }
-    // '{title}' → root path 'title'
-    // '{user.name}' → root path 'user'
-    const root = expr.split('.')[0];
-    if (root) paths.add(root);
+    // '{title}' → path 'title'
+    // '{user.name}' → path 'user.name'
+    if (expr) paths.add(expr);
   }
   return [...paths];
 }
