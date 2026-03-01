@@ -52,14 +52,14 @@ export function getByPath(obj, path) {
 export function interpolate(template, getData) {
   if (typeof template !== 'string') return template;
   return template.replace(/\{([^}]+)\}/g, (_, expr) => {
-    const val = safeEval(expr, getData);
+    const val = evaluateExpression(expr, getData);
     return val !== undefined ? String(val) : `{${expr}}`;
   });
 }
 
-function safeEval(expr, getData) {
+function evaluateExpression(expr, getData) {
   // Simple path resolution: 'todos.length', 'todo.text'
-  // No eval() - only dot-path lookups and basic .length / .filter().length
+  // only dot-path lookups and basic .length / .filter().length
   expr = expr.trim();
 
   // Handle .filter(fn).length pattern (must check BEFORE simple .length)
