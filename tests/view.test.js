@@ -7,7 +7,7 @@
  * and the full workflow of State-Driven Development (data + view coexist in one store).
  */
 
-import { createEventTest, runTests } from '@everystate/event-test';
+import { createEventTest, runTests } from '@everystate/test';
 import { createEveryState } from '@everystate/core';
 import {
   normalize,

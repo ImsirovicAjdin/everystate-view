@@ -1,10 +1,13 @@
 {
   "name": "@everystate/view",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "EveryState View: DOM structure as first-class state. DOMless resolve + surgical project.",
   "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
+  "bin": {
+    "everystate-view-self-test": "cli.js"
+  },
   "keywords": [
     "everystate",
     "view-as-state",
@@ -26,11 +29,33 @@
     "type": "git",
     "url": "https://github.com/ImsirovicAjdin/everystate-view"
   },
+  "homepage": "https://github.com/ImsirovicAjdin/everystate-view",
+  "peerDependencies": {
+    "@everystate/core": ">=1.0.5"
+  },
+  "scripts": {
+    "test": "node self-test.js",
+    "self-test": "node self-test.js",
+    "test:integration": "node tests/view.test.js",
+    "test:i": "node tests/view.test.js"
+  },
+  "devDependencies": {
+    "@everystate/test": "^1.0.0"
+  },
   "files": [
     "*.js",
     "*.d.ts",
     "*.md",
     "*.html",
+    "cli.js",
     "tests/"
-  ]
+  ],
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "types": "./index.d.ts"
+    },
+    "./resolve": "./resolve.js",
+    "./project": "./project.js"
+  }
 }

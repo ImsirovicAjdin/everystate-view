@@ -377,7 +377,7 @@ section('extractDataPaths');
 assert(eq(extractDataPaths('{title}'), ['title']), 'simple path');
 assert(eq(extractDataPaths('{todos.length}'), ['todos']), '.length extracts root');
 assert(eq(extractDataPaths('{todos.filter(t => t.done).length}'), ['todos']), '.filter().length extracts root');
-assert(eq(extractDataPaths('{user.name}'), ['user']), 'nested path extracts root');
+assert(eq(extractDataPaths('{user.name}'), ['user.name']), 'nested path returns full path');
 assert(eq(extractDataPaths('no braces'), []), 'no braces returns empty');
 assert(eq(extractDataPaths(''), []), 'empty string returns empty');
 assert(eq(extractDataPaths(42), []), 'non-string returns empty');
@@ -396,7 +396,7 @@ assert(twoRoots.includes('items'), 'has items');
 
 // == Summary ===========================================================
 
-console.log(`\n@everystate/view v1.0.0 self-test`);
+console.log(`\n@everystate/view v1.0.4 self-test`);
 if (failed > 0) {
   console.error(`✗ ${failed} assertion(s) failed, ${passed} passed`);
   process.exit(1);
