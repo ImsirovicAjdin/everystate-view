@@ -396,7 +396,7 @@ assert(twoRoots.includes('items'), 'has items');
 
 // == Summary ===========================================================
 
-console.log(`\n@everystate/view v1.0.4 self-test`);
+console.log(`\n@everystate/view v1.0.5 self-test`);
 if (failed > 0) {
   console.error(`✗ ${failed} assertion(s) failed, ${passed} passed`);
   process.exit(1);

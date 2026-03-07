@@ -1,6 +1,6 @@
 {
   "name": "@everystate/view",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "EveryState View: DOM structure as first-class state. DOMless resolve + surgical project.",
   "type": "module",
   "main": "index.js",
@@ -56,6 +56,7 @@
       "types": "./index.d.ts"
     },
     "./resolve": "./resolve.js",
-    "./project": "./project.js"
+    "./project": "./project.js",
+    "./app": "./app.js"
   }
 }

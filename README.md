@@ -1,4 +1,4 @@
-# @everystate/view v1.0.4
+# @everystate/view v1.0.5
 
 **DOM structure as first-class state. DOMless resolve + surgical project.**
 
@@ -10,32 +10,62 @@ Treat your entire UI as state. Normalize view specifications into a flat map, st
 npm install @everystate/view @everystate/core
 ```
 
-## Quick Start
+## Quick Start (createApp)
+
+The fastest way to get a reactive app running. One call does everything:
 
 ```js
 import { createEveryState } from '@everystate/core';
-import { flatten, resolveTree, project } from '@everystate/view';
+import { createApp } from '@everystate/view/app';
+
+const store = createEveryState({ count: 0, name: '' });
+
+const cleanup = createApp(store, '#app', {
+  tag: 'div', children: [
+    { tag: 'h1', text: 'Counter: {count}' },
+    { tag: 'input', type: 'text', placeholder: 'Your name', bind: 'name' },
+    { tag: 'p', text: 'Hello, {name}!' },
+    { tag: 'button', text: '+1', onClick: 'increment' },
+  ]
+}, {
+  increment() { store.set('count', store.get('count') + 1); }
+});
+```
+
+`createApp(store, el, viewSpec, handlers)` wraps `flatten` + `mount` + intent auto-wiring into a single call. Returns a cleanup function.
+
+## Declarative `show` binding
+
+Toggle element visibility based on a store path. No refs, no manual class toggling:
+
+```js
+{ tag: 'div', class: 'panel', show: 'ui.panelOpen', children: [
+  { tag: 'p', text: 'This panel is visible when ui.panelOpen is truthy' }
+]}
+```
+
+The engine subscribes to the path and sets `display: none` when falsy, restores when truthy.
+
+## Advanced usage (flatten + mount)
+
+For full control, use the lower-level API directly:
+
+```js
+import { createEveryState } from '@everystate/core';
+import { flatten } from '@everystate/view/resolve';
+import { mount } from '@everystate/view/project';
 
 const store = createEveryState({});
 
-// Define view as nested structure
-const viewSpec = {
+flatten({
   tag: 'div',
   children: [
     { tag: 'h1', text: 'Hello' },
     { tag: 'p', text: 'World' }
   ]
-};
+}, store, 'view');
 
-// Flatten to state
-flatten(store, viewSpec, 'view.root');
-
-// Resolve to concrete tree
-const tree = resolveTree(store, 'view.root');
-
-// Project to DOM
-const container = document.getElementById('app');
-project(store, 'view.root', container);
+const cleanup = mount(store, 'view', document.getElementById('app'), {});
 ```
 
 ## Why View-as-State?

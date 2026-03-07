@@ -199,6 +199,21 @@ export function mount(store, prefix, container, handlers = {}) {
     // Set initial attributes
     applyAttributes(el, nodeData, itemContext);
 
+    // Declarative show/hide binding
+    if (nodeData.show) {
+      const showPath = nodeData.show;
+      const showVal = itemContext
+        ? resolveContextPath(showPath, itemContext) ?? store.get(showPath)
+        : store.get(showPath);
+      if (!showVal) el.style.display = 'none';
+
+      if (!itemContext) {
+        addSub(showPath, (val) => {
+          el.style.display = val ? '' : 'none';
+        });
+      }
+    }
+
     // Text content
     if (nodeData.text) {
       setTextContent(el, resolveText(nodeData.text, itemContext));
@@ -329,6 +344,12 @@ export function mount(store, prefix, container, handlers = {}) {
           el.classList.add(cls);
         }
       }
+    }
+
+    // Declarative show/hide for template items
+    if (templateSpec.show) {
+      const showVal = resolveContextPath(templateSpec.show, itemContext) ?? store.get(templateSpec.show);
+      if (!showVal) el.style.display = 'none';
     }
 
     // Attributes
