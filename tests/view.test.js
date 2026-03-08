@@ -19,6 +19,7 @@ import {
   resetIdCounter
 } from '@everystate/view/resolve';
 import { extractDataPaths } from '@everystate/view/project';
+import { extractCss } from '@everystate/view/app';
 
 // Helper: read all normalized nodes from a store
 function readNodes(store, prefix = 'view') {
@@ -383,6 +384,59 @@ const results = runTests({
   },
 
   // == Data-path subscription (store-level) ============================─
+
+  // == extractCss (real store) =========================================
+
+  'extractCss writes css.{class}.{prop} to store': () => {
+    const t = createEventTest({});
+    extractCss({
+      tag: 'div', class: 'card', css: { color: 'red', padding: '8px' },
+      children: [
+        { tag: 'span', class: 'label', css: { fontWeight: 'bold' } }
+      ]
+    }, t.store);
+    t.assertPath('css.card.color', 'red');
+    t.assertPath('css.card.padding', '8px');
+    t.assertPath('css.label.fontWeight', 'bold');
+  },
+
+  'extractCss skips nodes without class': () => {
+    const t = createEventTest({});
+    extractCss({ tag: 'div', css: { color: 'blue' } }, t.store);
+    const val = t.store.get('css');
+    if (val !== undefined) throw new Error('should not write css without class');
+  },
+
+  'extractCss skips nodes without css prop': () => {
+    const t = createEventTest({});
+    extractCss({ tag: 'div', class: 'empty' }, t.store);
+    const val = t.store.get('css.empty');
+    if (val !== undefined) throw new Error('should not write css without css prop');
+  },
+
+  'extractCss handles null/undefined gracefully': () => {
+    const t = createEventTest({});
+    extractCss(null, t.store);
+    extractCss(undefined, t.store);
+    // No throw = pass
+  },
+
+  'extractCss deep nesting': () => {
+    const t = createEventTest({});
+    extractCss({
+      tag: 'div', class: 'a', css: { margin: '0' },
+      children: [
+        { tag: 'div', class: 'b', css: { padding: '4px' },
+          children: [
+            { tag: 'span', class: 'c', css: { fontSize: '12px' } }
+          ]
+        }
+      ]
+    }, t.store);
+    t.assertPath('css.a.margin', '0');
+    t.assertPath('css.b.padding', '4px');
+    t.assertPath('css.c.fontSize', '12px');
+  },
 
   'data-path subscriptions: store.set on data fires re-resolve': () => {
     resetIdCounter();

@@ -1,4 +1,4 @@
-# @everystate/view v1.0.5
+# @everystate/view v1.1.0
 
 **DOM structure as first-class state. DOMless resolve + surgical project.**
 
@@ -17,22 +17,31 @@ The fastest way to get a reactive app running. One call does everything:
 ```js
 import { createEveryState } from '@everystate/core';
 import { createApp } from '@everystate/view/app';
+import { increment } from './increment.js';
+import { decrement } from './decrement.js';
 
-const store = createEveryState({ count: 0, name: '' });
+const store = createEveryState({ count: 0 });
 
-const cleanup = createApp(store, '#app', {
-  tag: 'div', children: [
+const { cleanup } = createApp(store, '#app', {
+  tag: 'div', class: 'counter', css: { textAlign: 'center' },
+  children: [
     { tag: 'h1', text: 'Counter: {count}' },
-    { tag: 'input', type: 'text', placeholder: 'Your name', bind: 'name' },
-    { tag: 'p', text: 'Hello, {name}!' },
-    { tag: 'button', text: '+1', onClick: 'increment' },
+    { tag: 'button', text: '-', onClick: 'decrement' },
+    { tag: 'span', text: '{count}', class: 'value',
+      css: { fontSize: '3rem', fontWeight: '700' } },
+    { tag: 'button', text: '+', onClick: 'increment' },
   ]
-}, {
-  increment() { store.set('count', store.get('count') + 1); }
-});
+}, { increment, decrement });
 ```
 
-`createApp(store, el, viewSpec, handlers)` wraps `flatten` + `mount` + intent auto-wiring into a single call. Returns a cleanup function.
+`createApp` returns `{ store, cleanup }`. It wraps flatten + mount + intent auto-wiring + CSS extraction + handler auto-injection into a single call.
+
+### What's new in v1.1.0
+
+- **Co-located CSS** - Add `css: { ... }` to any view node with a `class`. `createApp` auto-extracts it to `css.{class}.{prop}` store paths (works with `@everystate/css` style engine).
+- **Handler auto-inject** - Handler functions receive `store` as their first argument automatically. Write `export function increment(store) { ... }` and pass `{ increment }` - no manual wiring.
+- **Return shape** - `createApp` now returns `{ store, cleanup }` instead of a bare cleanup function.
+- **Signature B** - `createApp(el, initialState, viewSpec, handlers)` can create the store for you (call `createApp.use(createEveryState)` first).
 
 ## Declarative `show` binding
 

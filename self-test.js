@@ -21,6 +21,7 @@ import {
 } from './resolve.js';
 
 import { extractDataPaths } from './project.js';
+import { extractCss } from './app.js';
 
 let passed = 0;
 let failed = 0;
@@ -394,9 +395,58 @@ assert(twoRoots.length === 2, 'two different roots');
 assert(twoRoots.includes('count'), 'has count');
 assert(twoRoots.includes('items'), 'has items');
 
+// == extractCss ========================================================
+
+section('extractCss');
+
+// Mock store with set() that records calls
+function mockCssStore() {
+  const entries = {};
+  return {
+    set(path, val) { entries[path] = val; },
+    entries,
+  };
+}
+
+{
+  const ms = mockCssStore();
+  extractCss({ tag: 'div', class: 'box', css: { color: 'red', fontSize: '14px' } }, ms);
+  assert(ms.entries['css.box.color'] === 'red', 'extractCss writes css.{class}.{prop}');
+  assert(ms.entries['css.box.fontSize'] === '14px', 'extractCss writes second prop');
+}
+
+{
+  const ms = mockCssStore();
+  extractCss({ tag: 'div', css: { color: 'red' } }, ms);
+  assert(Object.keys(ms.entries).length === 0, 'extractCss skips nodes without class');
+}
+
+{
+  const ms = mockCssStore();
+  extractCss({ tag: 'div', class: 'outer', css: { margin: '0' }, children: [
+    { tag: 'span', class: 'inner', css: { padding: '4px' } }
+  ] }, ms);
+  assert(ms.entries['css.outer.margin'] === '0', 'extractCss parent css');
+  assert(ms.entries['css.inner.padding'] === '4px', 'extractCss child css');
+}
+
+{
+  const ms = mockCssStore();
+  extractCss(null, ms);
+  extractCss(undefined, ms);
+  extractCss(42, ms);
+  assert(Object.keys(ms.entries).length === 0, 'extractCss ignores non-objects');
+}
+
+{
+  const ms = mockCssStore();
+  extractCss({ tag: 'div', class: 'plain' }, ms);
+  assert(Object.keys(ms.entries).length === 0, 'extractCss skips nodes without css');
+}
+
 // == Summary ===========================================================
 
-console.log(`\n@everystate/view v1.0.5 self-test`);
+console.log(`\n@everystate/view v1.1.0 self-test`);
 if (failed > 0) {
   console.error(`✗ ${failed} assertion(s) failed, ${passed} passed`);
   process.exit(1);
