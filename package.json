@@ -1,6 +1,6 @@
 {
   "name": "@everystate/view",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "EveryState View: DOM structure as first-class state. DOMless resolve + surgical project.",
   "type": "module",
   "main": "index.js",
