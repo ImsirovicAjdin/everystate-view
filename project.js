@@ -439,6 +439,15 @@ export function mount(store, prefix, container, handlers = {}) {
 
   function resolveBindPath(bindSpec, itemContext) {
     if (!bindSpec) return null;
+    // Support {context} interpolation (same syntax as resolveText)
+    if (bindSpec.includes('{') && itemContext) {
+      const resolved = bindSpec.replace(/\{([^}]+)\}/g, (_, expr) => {
+        const ctxVal = resolveContextPath(expr.trim(), itemContext);
+        return ctxVal !== undefined ? String(ctxVal) : `{${expr}}`;
+      });
+      if (!resolved.includes('{')) return resolved;
+      return null;
+    }
     if (itemContext) {
       const parts = bindSpec.split('.');
       if (itemContext[parts[0]] !== undefined) {
