@@ -1,4 +1,4 @@
-# @everystate/view v1.1.2
+# @everystate/view v1.1.4
 
 **DOM structure as first-class state. DOMless resolve + surgical project.**
 
@@ -35,6 +35,12 @@ const { cleanup } = createApp(store, '#app', {
 ```
 
 `createApp` returns `{ store, cleanup }`. It wraps flatten + mount + intent auto-wiring + CSS extraction + handler auto-injection into a single call.
+
+### What's new in v1.1.4
+
+- **Dynamic bind paths**: Added `{context}` interpolation support to bind paths, matching the existing text interpolation. Now you can use dynamic paths like `bind: "todos.{index}.done"` in templates for proper two-way binding in list contexts.
+
+### What's new in v1.1.0
 
 ### What's new in v1.1.0
 
