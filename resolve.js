@@ -105,8 +105,12 @@ function _normalizeNode(spec, parentId, nodes) {
     node[key] = spec[key];
   }
 
+  // Handle component escape hatch: leaf node, imperative mount manages subtree
+  if (spec.component) {
+    node.childIds = [];
+  }
   // Handle forEach: store the template spec, children come from data
-  if (spec.forEach) {
+  else if (spec.forEach) {
     // Store the raw template for expansion at resolve time
     node.template = spec.template ? JSON.parse(JSON.stringify(spec.template)) : null;
     node.childIds = []; // populated during resolve

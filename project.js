@@ -96,7 +96,7 @@ function setTextContent(el, text) {
 
 // Mount
 
-export function mount(store, prefix, container, handlers = {}) {
+export function mount(store, prefix, container, handlers = {}, components = {}) {
   const subs = [];     // { unsub }
   const nodeEls = {};  // nodeId -> DOM element
 
@@ -187,6 +187,23 @@ export function mount(store, prefix, container, handlers = {}) {
     const nodeData = store.get(nodePath);
     if (!nodeData) return null;
 
+    // Component escape hatch: delegate to imperative mount function
+    if (nodeData.component) {
+      const el = document.createElement(nodeData.tag || 'div');
+      nodeEls[nodeId] = el;
+      el.dataset.viewId = nodeId;
+      el.dataset.component = nodeData.component;
+      if (nodeData.class) el.className = nodeData.class;
+      const mountFn = components[nodeData.component];
+      if (mountFn) {
+        const teardown = mountFn(store, el);
+        if (typeof teardown === 'function') subs.push({ unsub: teardown });
+      } else {
+        console.warn(`[mount] no component registered for: "${nodeData.component}"`);
+      }
+      return el;
+    }
+
     // forEach nodes: expand from data
     if (nodeData.forEach) {
       return createForEachElement(nodeId, nodeData);
@@ -246,6 +263,21 @@ export function mount(store, prefix, container, handlers = {}) {
         if (e.key === 'Enter') callHandler(nodeData.onEnter, itemContext, e);
       });
     }
+    if (nodeData.onDragStart) {
+      el.addEventListener('dragstart', (e) => callHandler(nodeData.onDragStart, itemContext, e));
+    }
+    if (nodeData.onDragEnd) {
+      el.addEventListener('dragend', (e) => callHandler(nodeData.onDragEnd, itemContext, e));
+    }
+    if (nodeData.onDragOver) {
+      el.addEventListener('dragover', (e) => callHandler(nodeData.onDragOver, itemContext, e));
+    }
+    if (nodeData.onDragLeave) {
+      el.addEventListener('dragleave', (e) => callHandler(nodeData.onDragLeave, itemContext, e));
+    }
+    if (nodeData.onDrop) {
+      el.addEventListener('drop', (e) => callHandler(nodeData.onDrop, itemContext, e));
+    }
 
     // Subscribe to text changes (surgical update)
     if (nodeData.text && !itemContext) {
@@ -280,8 +312,33 @@ export function mount(store, prefix, container, handlers = {}) {
     if (nodeData.childIds && nodeData.childIds.length > 0) {
       const childContainer = el;
       for (const childId of nodeData.childIds) {
-        const childEl = createNodeElement(childId, itemContext);
-        if (childEl) childContainer.appendChild(childEl);
+        const childData = store.get(`${prefix}.nodes.${childId}`);
+        if (childData && childData.forEach && !childData.tag) {
+          // Fragment forEach: expand items inline (no wrapper element)
+          const startMarker = document.createComment(`fragment-${childId}-start`);
+          const endMarker = document.createComment(`fragment-${childId}-end`);
+          childContainer.appendChild(startMarker);
+          const fragAs = childData.as || 'item';
+          const renderFragment = () => {
+            while (startMarker.nextSibling && startMarker.nextSibling !== endMarker) {
+              startMarker.nextSibling.remove();
+            }
+            const items = store.get(childData.forEach);
+            if (Array.isArray(items) && childData.template) {
+              items.forEach((item, idx) => {
+                const ctx = { ...itemContext, [fragAs]: item, [`${fragAs}Index`]: idx };
+                const childEl = createTemplateElement(childData.template, childId, ctx);
+                if (childEl) childContainer.insertBefore(childEl, endMarker);
+              });
+            }
+          };
+          childContainer.appendChild(endMarker);
+          renderFragment();
+          addSub(childData.forEach, renderFragment);
+        } else {
+          const childEl = createNodeElement(childId, itemContext);
+          if (childEl) childContainer.appendChild(childEl);
+        }
       }
 
       // Subscribe to childIds changes (structural reconciliation)
@@ -332,6 +389,18 @@ export function mount(store, prefix, container, handlers = {}) {
   // Create element from a template spec (for forEach items)
 
   function createTemplateElement(templateSpec, parentNodeId, itemContext) {
+    // Component escape hatch inside templates
+    if (templateSpec && templateSpec.component) {
+      const el = document.createElement(templateSpec.tag || 'div');
+      if (templateSpec.class) el.className = templateSpec.class;
+      el.dataset.component = templateSpec.component;
+      const mountFn = components[templateSpec.component];
+      if (mountFn) {
+        const teardown = mountFn(store, el);
+        if (typeof teardown === 'function') subs.push({ unsub: teardown });
+      }
+      return el;
+    }
     if (!templateSpec || !templateSpec.tag) return null;
 
     const el = document.createElement(templateSpec.tag);
@@ -355,6 +424,7 @@ export function mount(store, prefix, container, handlers = {}) {
     // Attributes
     if (templateSpec.type) el.type = templateSpec.type;
     if (templateSpec.placeholder) el.placeholder = templateSpec.placeholder;
+    if (templateSpec.draggable) el.draggable = true;
 
     // Text
     if (templateSpec.text) {
@@ -382,12 +452,51 @@ export function mount(store, prefix, container, handlers = {}) {
         if (e.key === 'Enter') callHandler(templateSpec.onEnter, itemContext, e);
       });
     }
+    if (templateSpec.onDragStart) {
+      el.addEventListener('dragstart', (e) => callHandler(templateSpec.onDragStart, itemContext, e));
+    }
+    if (templateSpec.onDragEnd) {
+      el.addEventListener('dragend', (e) => callHandler(templateSpec.onDragEnd, itemContext, e));
+    }
+    if (templateSpec.onDragOver) {
+      el.addEventListener('dragover', (e) => callHandler(templateSpec.onDragOver, itemContext, e));
+    }
+    if (templateSpec.onDragLeave) {
+      el.addEventListener('dragleave', (e) => callHandler(templateSpec.onDragLeave, itemContext, e));
+    }
+    if (templateSpec.onDrop) {
+      el.addEventListener('drop', (e) => callHandler(templateSpec.onDrop, itemContext, e));
+    }
 
     // Recursive children
     if (Array.isArray(templateSpec.children)) {
       for (const childSpec of templateSpec.children) {
-        const childEl = createTemplateElement(childSpec, parentNodeId, itemContext);
-        if (childEl) el.appendChild(childEl);
+        if (childSpec.forEach) {
+          // Nested forEach: expand items inline with reactive updates
+          const startMarker = document.createComment('nested-start');
+          const endMarker = document.createComment('nested-end');
+          el.appendChild(startMarker);
+          const nestedAs = childSpec.as || 'item';
+          const renderNested = () => {
+            while (startMarker.nextSibling && startMarker.nextSibling !== endMarker) {
+              startMarker.nextSibling.remove();
+            }
+            const items = store.get(childSpec.forEach);
+            if (Array.isArray(items) && childSpec.template) {
+              items.forEach((item, idx) => {
+                const nestedContext = { ...itemContext, [nestedAs]: item, [`${nestedAs}Index`]: idx };
+                const childEl = createTemplateElement(childSpec.template, parentNodeId, nestedContext);
+                if (childEl) el.insertBefore(childEl, endMarker);
+              });
+            }
+          };
+          el.appendChild(endMarker);
+          renderNested();
+          addSub(childSpec.forEach, renderNested);
+        } else {
+          const childEl = createTemplateElement(childSpec, parentNodeId, itemContext);
+          if (childEl) el.appendChild(childEl);
+        }
       }
     }
 
@@ -408,31 +517,41 @@ export function mount(store, prefix, container, handlers = {}) {
     }
     if (nodeData.type) el.type = nodeData.type;
     if (nodeData.placeholder) el.placeholder = nodeData.placeholder;
+    if (nodeData.draggable) el.draggable = true;
   }
 
   function applyBind(el, nodeData, path) {
     const val = store.get(path);
-    if (nodeData.tag === 'input') {
+    const tag = nodeData.tag;
+    const isInput = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+    if (isInput) {
       if (nodeData.type === 'checkbox') {
         el.checked = !!val;
       } else {
         el.value = val != null ? String(val) : '';
       }
+      el.addEventListener('input', (e) => {
+        const newVal = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+        store.set(path, newVal);
+      });
+    } else {
+      // Non-input: one-way display binding via textContent
+      el.textContent = val != null ? String(val) : '';
     }
-
-    el.addEventListener('input', (e) => {
-      const newVal = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-      store.set(path, newVal);
-    });
 
     // Subscribe for external changes
     addSub(path, (v) => {
-      if (document.activeElement === el) return; // avoid cursor jump
-      if (nodeData.type === 'checkbox') {
-        el.checked = !!v;
+      if (isInput) {
+        if (document.activeElement === el) return; // avoid cursor jump
+        if (nodeData.type === 'checkbox') {
+          el.checked = !!v;
+        } else {
+          const s = v != null ? String(v) : '';
+          if (el.value !== s) el.value = s;
+        }
       } else {
-        const s = v != null ? String(v) : '';
-        if (el.value !== s) el.value = s;
+        el.textContent = v != null ? String(v) : '';
       }
     });
   }
